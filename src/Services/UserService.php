@@ -220,7 +220,8 @@ class UserService extends AbstractFOSRestController
      */
     public function updateUser($request)
     {
-        $data = $request->request->all();
+        $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $data = $data['params'];
 
         // Validate User ID
         if (empty($data['id'])) {
@@ -242,7 +243,7 @@ class UserService extends AbstractFOSRestController
         $uploadedFile = $request->files->get('imageFile');
         $form         = $this->createForm(UserFormType::class, $user);
         $form->submit(
-            array_merge($request->request->all(), [
+            array_merge($data, [
                 'file' => $request->files->all()
             ]), false
         );
