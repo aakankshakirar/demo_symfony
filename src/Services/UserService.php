@@ -139,7 +139,7 @@ class UserService extends AbstractFOSRestController
      */
     public function register($request)
     {
-        $data = $request->request->all();
+        $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         if (!empty($data['email'])) {
             $this->checkEmailExist($data['email']);
         }
