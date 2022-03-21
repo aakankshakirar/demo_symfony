@@ -221,7 +221,6 @@ class UserService extends AbstractFOSRestController
     public function updateUser($request)
     {
         $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        $data = $data['params'];
 
         // Validate User ID
         if (empty($data['id'])) {
