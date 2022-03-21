@@ -149,7 +149,7 @@ class UserService extends AbstractFOSRestController
         $form         = $this->createForm(UserFormType::class, $user);
 
         $form->submit(
-            array_merge($request->request->all(), [
+            array_merge($data, [
                 'file' => $request->files->all()
             ])
         );
