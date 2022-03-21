@@ -100,7 +100,7 @@ class UserService extends AbstractFOSRestController
      */
     public function userList($request)
     {
-        $data   = $request->request->all();
+        $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         $result = [];
 
         $page     = $this->getPage($data['page']);
