@@ -8,6 +8,7 @@ use App\Repository\UserRepository;
 use App\Util\PagerTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -40,9 +41,14 @@ class UserService extends AbstractFOSRestController
     private $security;
 
     /**
+     * @var ParameterBagInterface
+     */
+    private $parameterBag;
+
+    /**
      * User profile image path
      */
-    const AVATAR_PATH = "public/uploads/users/";
+    const AVATAR_PATH = '%kernel.project_dir%/public/uploads/users/';
 
     /**
      * UserService constructor.
@@ -51,13 +57,15 @@ class UserService extends AbstractFOSRestController
      * @param EntityManagerInterface       $em
      * @param UserPasswordEncoderInterface $passwordEncoder
      * @param Security                     $security
+     * @param ParameterBagInterface        $parameterBag
      */
-    public function __construct(UserRepository $userRepository, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, Security $security)
+    public function __construct(UserRepository $userRepository, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, Security $security, ParameterBagInterface $parameterBag)
     {
         $this->userRepository  = $userRepository;
         $this->em              = $em;
         $this->passwordEncoder = $passwordEncoder;
         $this->security        = $security;
+        $this->parameterBag    = $parameterBag;
     }
 
     /**
@@ -100,8 +108,9 @@ class UserService extends AbstractFOSRestController
      */
     public function userList($request)
     {
-        $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-        $data = $data['params'];
+        $data = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $data   = $data['params'];
         $result = [];
 
         $page     = $this->getPage($data['page']);
@@ -120,7 +129,7 @@ class UserService extends AbstractFOSRestController
                     'first_name' => $user->getFirstName(),
                     'last_name'  => $user->getLastName(),
                     'email'      => $user->getEmail(),
-                    'avatar'     => (!empty($user->getAvatar())) ? self::AVATAR_PATH . $user->getAvatar() : $user->getAvatar()
+                    'avatar'     => (!empty($user->getAvatar())) ? $this->parameterBag->get('avatar_path') . $user->getAvatar() : $user->getAvatar()
                 ];
                 $result[] = $data;
             }
@@ -139,7 +148,7 @@ class UserService extends AbstractFOSRestController
      */
     public function register($request)
     {
-        $data           = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode((string)$request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         if (!empty($data['email'])) {
             $this->checkEmailExist($data['email']);
         }
@@ -202,7 +211,7 @@ class UserService extends AbstractFOSRestController
             'first_name' => $user->getFirstName(),
             'last_name'  => $user->getLastName(),
             'email'      => $user->getEmail(),
-            'avatar'     => (!empty($user->getAvatar())) ? self::AVATAR_PATH . $user->getAvatar() : $user->getAvatar()
+            'avatar'     => (!empty($user->getAvatar())) ? $this->parameterBag->get('avatar_path') . $user->getAvatar() : $user->getAvatar()
         ];
 
         return [
