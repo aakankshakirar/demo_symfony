@@ -2,12 +2,14 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\User;
 use App\Services\UserService;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 /**
  * Class UserController
@@ -31,26 +33,21 @@ class UserController extends AbstractFOSRestController
         $this->userService = $userService;
     }
 
-    #[Route('users', name: 'list')]
-
     /**
      * User List
-     * @param Request $request
+     *
+     * @param int $page
+     * @param int $per_page
      *
      * @return Response
+     * @Route("users/{page}/{per_page}", name="list", methods={"GET"}, defaults={"page": 1, "per_page": "4"})
      */
-    public function index(Request $request): Response
+    public function index(int $page, int $per_page): Response
     {
         try {
-            if ($request->isMethod('post')) {
-                $res = $this->userService->userList($request);
+            $response = $this->userService->userList($page, $per_page);
 
-                return $this->json($res);
-            }
-            return $this->json([
-                'status'  => Response::HTTP_BAD_REQUEST,
-                'message' => 'Invalid Method'
-            ]);
+            return $this->json($response);
 
         } catch (\Exception $e) {
             return $this->json([
@@ -60,28 +57,22 @@ class UserController extends AbstractFOSRestController
         }
     }
 
-    #[Route('register', name: 'register')]
-
     /**
      * User Registration
+     *
      * @param Request $request
      *
      * @return Response
+     * @Route("register", name="register", methods={"POST"})
      */
     public function register(Request $request): Response
     {
         try {
-            if ($request->isMethod('post')) {
-                $this->userService->register($request);
+            $this->userService->register($request);
 
-                return $this->json([
-                    'status' => Response::HTTP_OK,
-                    'data'   => 'Registered successfully'
-                ]);
-            }
             return $this->json([
-                'status'  => Response::HTTP_BAD_REQUEST,
-                'message' => 'Invalid Method'
+                'status' => Response::HTTP_OK,
+                'data'   => 'Registered successfully'
             ]);
 
         } catch (\Exception $e) {
@@ -92,24 +83,21 @@ class UserController extends AbstractFOSRestController
         }
     }
 
-    #[Route('edit', name: 'edit')]
-
     /**
      * Get Single User detail
-     * @param Request $request
+     *
+     * @param User $user
      *
      * @return Response
+     * @Route("edit/{id}", name="edit", methods={"GET"})
+     * @ParamConverter("user", options={"mapping": {"id" : "id"}})
      */
-    public function editUser(Request $request): Response
+    public function editUser(User $user): Response
     {
         try {
-            $response = $this->userService->editUser($request);
+            $response = $this->userService->editUser($user);
 
-            return $this->json([
-                'status'  => $response['status'],
-                'message' => $response['message'],
-                'data'    => $response['data']
-            ]);
+            return $this->json($response);
 
         } catch (\Exception $e) {
             return $this->json([
@@ -123,19 +111,20 @@ class UserController extends AbstractFOSRestController
 
     /**
      * Update user detail
+     *
      * @param Request $request
+     * @param User    $user
      *
      * @return Response
+     * @Route("update/{id}", name="update", methods={"POST"})
+     * @ParamConverter("user", options={"mapping": {"id" : "id"}})
      */
-    public function updateUser(Request $request): Response
+    public function updateUser(User $user, Request $request): Response
     {
         try {
-            $response = $this->userService->updateUser($request);
+            $response = $this->userService->updateUser($user, $request);
 
-            return $this->json([
-                'status'  => $response['status'],
-                'message' => $response['message'],
-            ]);
+            return $this->json($response);
 
         } catch (\Exception $e) {
             return $this->json([
@@ -145,13 +134,36 @@ class UserController extends AbstractFOSRestController
         }
     }
 
-    #[Route('verify-password', name: 'verify_password')]
-
     /**
-     * Verify password to protect user list view
+     * Update user detail
+     *
      * @param Request $request
      *
      * @return Response
+     * @Route("uploadFile", name="uploadFile", methods={"POST"})
+     */
+    public function uploadFile(Request $request): Response
+    {
+        try {
+            $response = $this->userService->uploadFile($request);
+
+            return $this->json($response);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'status'  => Response::HTTP_BAD_REQUEST,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Verify password to protect user list view
+     *
+     * @param $request
+     *
+     * @return Response
+     * @Route("verify-password", name="verify-password", methods={"POST"})
      */
     public function verifyPassword(Request $request): Response
     {
